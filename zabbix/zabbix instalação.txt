@@ -1,57 +1,84 @@
-https://www.zabbix.com/download?zabbix=7.0&os_distribution=ubuntu&os_version=24.04&components=server_frontend_agent&db=mysql&ws=apache
+# Atualiza a lista de pacotes disponíveis
+sudo apt update
 
-zabbix instalação 
-
-sudo apt update 
-
+# Atualiza os pacotes instalados
 sudo apt upgrade
 
+# Entra no modo root
 sudo -s
 
+
+# Baixa o pacote do repositório oficial do Zabbix
 wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu24.04_all.deb
 
+# Instala o pacote do repositório do Zabbix
 dpkg -i zabbix-release_latest_7.0+ubuntu24.04_all.deb
 
+# Atualiza novamente para reconhecer o repositório Zabbix
 apt update
 
+
+# Instala Zabbix Server, Frontend, Apache, agente e scripts SQL
 apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
 
+# Instala o servidor MySQL
 apt install mysql-server -y
 
-mysql -uroot -p
-"senha para banco de dados - zabbix123"
 
+# Acessa o MySQL como root
+mysql -uroot -p
+# senha usada no tutorial: zabbix123
+
+
+# Cria o banco de dados do Zabbix
 create database zabbix character set utf8mb4 collate utf8mb4_bin;
 
+# Cria o usuário zabbix e define a senha
 create user zabbix@localhost identified by 'zabbix123';
 
+# Concede todas as permissões ao usuário zabbix
 grant all privileges on zabbix.* to zabbix@localhost;
 
+# Permite criação de funções durante a importação do schema
 set global log_bin_trust_function_creators = 1;
 
+# Sai do MySQL
 quit;
 
-zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
-"pode demorar depende do seu PC"
 
+# Importa o schema do banco de dados Zabbix (pode demorar)
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
+# senha: zabbix123
+
+
+# Acessa novamente o MySQL como root para reverter o parâmetro temporário
 mysql -uroot -p
 
+# Desativa log_bin_trust_function_creators
 set global log_bin_trust_function_creators = 0;
 
 quit;
 
+
+# Abre o arquivo de configuração do Zabbix Server
 vim /etc/zabbix/zabbix_server.conf
-"pode usar o comando nano também"
+# ou: nano /etc/zabbix/zabbix_server.conf
+# Dentro do arquivo, configure:
+# DBPassword=zabbix123
+# Salve e saia (:wq no vim)
 
-inserir o password do banco de dados, apertar "esc" :wq e "Enter" 
 
+# Reinicia todos os serviços necessários
 systemctl restart zabbix-server zabbix-agent apache2
 
+# Habilita os serviços para iniciar automaticamente no boot
 systemctl enable zabbix-server zabbix-agent apache2
 
-Depois acessar via IP 
-Admin
-zabbix
 
+# Acesse o frontend no navegador usando o IP da máquina
+# Exemplo:
+# http://10.0.1.5/zabbix
 
-
+# Login padrão:
+# Usuário: Admin
+# Senha: zabbix
